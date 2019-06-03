@@ -13,7 +13,7 @@
 // under the License.
 
 // Package goconfig is a fully functional and comments-support configuration file(.ini) parser.
-package goconfig
+package configx
 
 import (
 	"fmt"
@@ -40,6 +40,12 @@ const (
 	ERR_COULD_NOT_PARSE
 )
 
+const (
+	CONFIG_TYPE_FILE string = "FILE"
+	CONFIG_TYPE_HTTP string = "HTTP"
+	CONFIG_TYPE_BYTE string = "BYTE"
+)
+
 var LineBreak = "\n"
 
 // Variable regexp pattern: %(variable)s
@@ -63,20 +69,35 @@ type ConfigFile struct {
 
 	sectionComments map[string]string            // Sections comments.
 	keyComments     map[string]map[string]string // Keys comments.
-	BlockMode       bool                         // Indicates whether use lock or not.
+	configType      string                       // config file type
+
+	BlockMode bool // Indicates whether use lock or not.
 }
 
 // newConfigFile creates an empty configuration representation.
-func newConfigFile(fileNames []string) *ConfigFile {
+func newConfigFile(fileNames []string, configType string) *ConfigFile {
 	c := new(ConfigFile)
 	c.fileNames = fileNames
 	c.data = make(map[string]map[string]string)
 	c.keyList = make(map[string][]string)
 	c.sectionComments = make(map[string]string)
 	c.keyComments = make(map[string]map[string]string)
+	c.configType = configType
 	c.BlockMode = true
 	return c
 }
+
+// func newConfigFile(url string) *ConfigFile {
+// 	c := new(ConfigFile)
+// 	c.fileNames = fileNames
+// 	c.data = make(map[string]map[string]string)
+// 	c.keyList = make(map[string][]string)
+// 	c.sectionComments = make(map[string]string)
+// 	c.keyComments = make(map[string]map[string]string)
+// 	c.configType = CONFIG_TYPE_FALIE
+// 	c.BlockMode = true
+// 	return c
+// }
 
 // SetValue adds a new section-key-value to the configuration.
 // It returns true if the key and value were inserted,

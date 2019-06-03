@@ -12,7 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-package goconfig
+package configx
 
 import (
 	"bufio"
@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"path"
 	"strings"
@@ -189,7 +190,7 @@ func LoadFromData(data []byte) (c *ConfigFile, err error) {
 		return nil, err
 	}
 
-	c = newConfigFile([]string{tmpName})
+	c = newConfigFile([]string{tmpName}, CONFIG_TYPE_BYTE)
 	err = c.read(bytes.NewBuffer(data))
 	return c, err
 }
@@ -199,9 +200,38 @@ func LoadFromData(data []byte) (c *ConfigFile, err error) {
 // You must use ReloadData to reload.
 // You cannot append files a configfile read this way.
 func LoadFromReader(in io.Reader) (c *ConfigFile, err error) {
-	c = newConfigFile([]string{""})
+	c = newConfigFile([]string{""}, CONFIG_TYPE_BYTE)
 	err = c.read(in)
 	return c, err
+}
+
+func (c *ConfigFile) loadHttp(url string) (err error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	return c.read(resp.Body)
+}
+
+func LoadConfigHttp(url string, moreUrls ...string) (c *ConfigFile, err error) {
+	// Append files' name together.
+	fileNames := make([]string, 1, len(moreUrls)+1)
+	fileNames[0] = url
+	if len(moreUrls) > 0 {
+		fileNames = append(fileNames, moreUrls...)
+	}
+
+	c = newConfigFile(fileNames, CONFIG_TYPE_HTTP)
+
+	for _, name := range fileNames {
+		if err = c.loadHttp(name); err != nil {
+			return nil, err
+		}
+	}
+
+	return c, nil
 }
 
 func (c *ConfigFile) loadFile(fileName string) (err error) {
@@ -224,7 +254,7 @@ func LoadConfigFile(fileName string, moreFiles ...string) (c *ConfigFile, err er
 		fileNames = append(fileNames, moreFiles...)
 	}
 
-	c = newConfigFile(fileNames)
+	c = newConfigFile(fileNames, CONFIG_TYPE_FILE)
 
 	for _, name := range fileNames {
 		if err = c.loadFile(name); err != nil {
@@ -238,13 +268,22 @@ func LoadConfigFile(fileName string, moreFiles ...string) (c *ConfigFile, err er
 // Reload reloads configuration file in case it has changes.
 func (c *ConfigFile) Reload() (err error) {
 	var cfg *ConfigFile
-	if len(c.fileNames) == 1 {
-		if c.fileNames[0] == "" {
-			return fmt.Errorf("file opened from in-memory data, use ReloadData to reload")
+
+	switch c.configType {
+	case CONFIG_TYPE_BYTE:
+		return fmt.Errorf("file opened from in-memory data, use ReloadData to reload")
+	case CONFIG_TYPE_FILE:
+		if len(c.fileNames) == 1 {
+			cfg, err = LoadConfigFile(c.fileNames[0])
+		} else {
+			cfg, err = LoadConfigFile(c.fileNames[0], c.fileNames[1:]...)
 		}
-		cfg, err = LoadConfigFile(c.fileNames[0])
-	} else {
-		cfg, err = LoadConfigFile(c.fileNames[0], c.fileNames[1:]...)
+	case CONFIG_TYPE_HTTP:
+		if len(c.fileNames) == 1 {
+			cfg, err = LoadConfigHttp(c.fileNames[0])
+		} else {
+			cfg, err = LoadConfigHttp(c.fileNames[0], c.fileNames[1:]...)
+		}
 	}
 
 	if err == nil {

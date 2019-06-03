@@ -1,72 +1,53 @@
-goconfig [![Build Status](https://drone.io/github.com/Unknwon/goconfig/status.png)](https://drone.io/github.com/Unknwon/goconfig/latest) [![Go Walker](http://gowalker.org/api/v1/badge)](http://gowalker.org/github.com/Unknwon/goconfig)
-========
 
-[中文文档](README_ZH.md)
+## 关于
 
-**IMPORTANT** 
+包 configx 是一个易于使用，支持注释的 Go 语言配置文件解析器，该文件的书写格式和 Windows 下的 INI 文件一样。
 
-- This library is under bug fix only mode, which means no more features will be added.
-- I'm continuing working on better Go code with a different library: [ini](https://github.com/go-ini/ini).
-
-## About
-
-Package goconfig is a easy-use, comments-support configuration file parser for the Go Programming Language, which provides a structure similar to what you would find on Microsoft Windows INI files.
-
-The configuration file consists of sections, led by a `[section]` header and followed by `name:value` or `name=value` entries. Note that leading whitespace is removed from values. The optional values can contain format strings which refer to other values in the same section, or values in a special DEFAULT section. Comments are indicated by ";" or "#"; comments may begin anywhere on a single line.
+配置文件由形为 `[section]` 的节构成，内部使用 `name:value` 或 `name=value` 这样的键值对；每行开头和尾部的空白符号都将被忽略；如果未指定任何节，则会默认放入名为 `DEFAULT` 的节当中；可以使用 “;” 或 “#” 来作为注释的开头，并可以放置于任意的单独一行中。
 	
-## Features
+## 特性
 	
-- It simplified operation processes, easy to use and undersatnd; therefore, there are less chances to have errors. 
-- It uses exactly the same way to access a configuration file as you use Windows APIs, so you don't need to change your code style.
-- It supports read recursion sections.
-- It supports auto increment of key.
-- It supports **READ** and **WRITE** configuration file with comments each section or key which all the other parsers don't support!!!!!!!
-- It supports get value through type bool, float64, int, int64 and string, methods that start with "Must" means ignore errors and get zero-value if error occurs, or you can specify a default value.
-- It's able to load multiple files to overwrite key values. 
+- 简化流程，易于理解，更少出错。
+- 提供与 Windows API 一模一样的操作方式。
+- 支持读取递归节。
+- 支持自增键名。
+- 支持对注释的 **读** 和 **写** 操作，其它所有解析器都不支持！！！！
+- 可以直接返回 bool, float64, int, int64 和 string 类型的值，如果使用 “Must” 开头的方法，则一定会返回这个类型的一个值而不返回错误，如果错误发生则会返回零值。
+- 支持加载多个文件来重写值。
 
-## Installation
+## 安装
 	
-	go get github.com/Unknwon/goconfig
+	go get github.com/hagbei/configx
 
-Or
-	
-	gopm get github.com/Unknwon/goconfig
+或
 
-## API Documentation
+	gopm get github.com/hagbei/configx
 
-[Go Walker](http://gowalker.org/github.com/Unknwon/goconfig).
 
-## Example
+## API 文档
 
-Please see [conf.ini](testdata/conf.ini) as an example.
+[Go Walker](http://gowalker.org/github.com/hagbei/configx).
 
-### Usage
+## 示例
 
-- Function `LoadConfigFile` load file(s) depends on your situation, and return a variable with type `ConfigFile`.
-- `GetValue` gives basic functionality of getting a value of given section and key.
-- Methods like `Bool`, `Int`, `Int64` return corresponding type of values.
-- Methods start with `Must` return corresponding type of values and returns zero-value of given type if something goes wrong.
-- `SetValue` sets value to given section and key, and inserts somewhere if it does not exist.
-- `DeleteKey` deletes by given section and key.
-- Finally, `SaveConfigFile` saves your configuration to local file system.
-- Use method `Reload` in case someone else modified your file(s).
-- Methods contains `Comment` help you manipulate comments.
-- `LoadFromReader` allows loading data without an intermediate file.
-- `SaveConfigData` added, which writes configuration to an arbitrary writer.
-- `ReloadData` allows to reload data from memory.
+请查看 [conf.ini](testdata/conf.ini) 文件作为使用示例。
 
-Note that you cannot mix in-memory configuration with on-disk configuration.
+### 用例
 
-## More Information
+- 函数 `LoadConfigFile` 加载一个或多个文件，然后返回一个类型为 `ConfigFile` 的变量。
+- 函数 `LoadConfigHttp` 加载一个或多个网络文件，然后返回一个类型为 `ConfigFile` 的变量。
+- 函数 `Reload` 可以重载您的配置文件。
+- `GetValue` 可以简单的获取某个值。
+- 像 `Bool`、`Int`、`Int64` 这样的方法会直接返回指定类型的值。
+- 以 `Must` 开头的方法不会返回错误，但当错误发生时会返回零值。
+- `SetValue` 可以设置某个值。
+- `DeleteKey` 可以删除某个键。
+- 最后，`SaveConfigFile` 可以保持您的配置到本地文件系统。
 
-- All characters are CASE SENSITIVE, BE CAREFUL!
+## 更多信息
 
-## Credits
+- 所有字符都是大小写敏感的！
 
-- [goconf](http://code.google.com/p/goconf/)
-- [robfig/config](https://github.com/robfig/config)
-- [Delete an item from a slice](https://groups.google.com/forum/?fromgroups=#!topic/golang-nuts/lYz8ftASMQ0)
+## 授权许可
 
-## License
-
-This project is under Apache v2 License. See the [LICENSE](LICENSE) file for the full license text.
+本项目采用 Apache v2 开源授权许可证，完整的授权说明已放置在 [LICENSE](LICENSE) 文件中。
